@@ -105,9 +105,5 @@ def validate_config(accounts: Dict[str, Any], settings: Dict[str, Any]) -> None:
     if float(action_delay.get("min", 0)) > float(action_delay.get("max", 0)):
         raise ValueError("settings.action_delay_seconds.min tidak boleh lebih besar dari max")
 
-    account_pause = settings.get("per_account_pause_seconds", {"min": 0, "max": 0})
-    if float(account_pause.get("min", 0)) > float(account_pause.get("max", 0)):
-        raise ValueError("settings.per_account_pause_seconds.min tidak boleh lebih besar dari max")
-
     if int(settings.get("max_latest_tweets_per_target", 1)) < 1:
         raise ValueError("settings.max_latest_tweets_per_target minimal 1")

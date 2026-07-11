@@ -9,7 +9,7 @@ from selenium.common.exceptions import WebDriverException
 from src.browser import create_driver, load_cookies, save_cookies
 from src.retweeter import TwitterRetweeter
 from src.tracker import RetweetTracker
-from src.utils import ensure_runtime_dirs, print_progress, random_sleep, read_json, setup_logging, validate_config
+from src.utils import ensure_runtime_dirs, print_progress, read_json, setup_logging, validate_config
 
 RUNNING = True
 
@@ -94,7 +94,7 @@ def main() -> None:
 
     targets = enabled_items(accounts["targets"])
     retweeters = enabled_items(accounts["retweeters"])
-    run_once = bool(settings.get("run_once", False) or args.once)
+    run_once = bool(settings.get("run_once", False))
     logger.info("AutoretweetX aktif: %s target, %s retweeter, run_once=%s", len(targets), len(retweeters), run_once)
 
     while RUNNING:

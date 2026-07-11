@@ -10,7 +10,7 @@ AutoretweetX adalah automation lokal berbasis **Python + Selenium** untuk memoni
 - Tetap mendukung **cookies per akun** di folder `config/cookies/`.
 - Retweet hanya untuk tweet yang belum tercatat di `data/retweet_history.json`.
 - Delay acak antar siklus pengecekan agar tidak terlalu repetitif.
-- Opsi `run_once`, `--once`, atau `--test` untuk menjalankan satu siklus saja saat testing.
+- Opsi `run_once` untuk menjalankan satu siklus saja saat testing.
 - Progress bar sederhana saat mengecek target.
 - Console log berwarna dengan `colorama` dan file log di `logs/autoretweetx.log`.
 - Folder runtime `logs/` dan `data/` dibuat otomatis jika belum ada.
@@ -124,10 +124,6 @@ Cara modifikasi:
     "min": 40,
     "max": 90
   },
-  "per_account_pause_seconds": {
-    "min": 3,
-    "max": 8
-  },
   "page_load_timeout_seconds": 45,
   "wait_timeout_seconds": 20,
   "action_delay_seconds": {
@@ -146,7 +142,6 @@ Penjelasan singkat:
 - `run_once`: `true` untuk satu siklus pengecekan saja, cocok untuk testing.
 - `colored_console`: aktifkan/nonaktifkan warna log di terminal.
 - `check_delay_minutes`: delay acak antar siklus.
-- `per_account_pause_seconds`: jeda antar akun agar multi akun lebih stabil.
 - `action_delay_seconds`: delay acak antar aksi klik.
 - `max_latest_tweets_per_target`: jumlah tweet terbaru yang dibaca per target.
 - `log_file`: lokasi file log runtime.
@@ -169,7 +164,7 @@ Alur kerja script:
 6. Mengecek tweet terbaru target aktif dengan progress bar sederhana.
 7. Melakukan retweet jika tweet belum ada di history.
 8. Menyimpan history retweet dan cookies terbaru.
-9. Jika `run_once: false` dan tidak memakai `--once/--test`, menunggu delay acak sebelum siklus berikutnya.
+9. Jika `run_once: false`, menunggu delay acak sebelum siklus berikutnya.
 
 Untuk berhenti, tekan:
 
@@ -179,21 +174,23 @@ Ctrl+C
 
 ## Mode testing satu kali
 
-Untuk test tanpa loop panjang, pilih salah satu cara berikut. Cara paling praktis adalah memakai CLI flag:
-
-```bash
-python main.py --once
-# atau
-python main.py --test
-```
-
-Alternatif permanen via `config/settings.json`:
+Untuk test tanpa loop panjang, edit `config/settings.json`:
 
 ```json
 "run_once": true
 ```
 
-Jika sudah stabil, ubah kembali ke `false` agar bot berjalan berulang.
+Lalu jalankan:
+
+```bash
+python main.py
+```
+
+Jika sudah stabil, ubah kembali ke:
+
+```json
+"run_once": false
+```
 
 ## Tips anti-detect sederhana
 
@@ -225,6 +222,6 @@ Jika sudah stabil, ubah kembali ke `false` agar bot berjalan berulang.
    - `logs/`
    - `data/`
    - `config/cookies/`
-4. Cek `config/settings.json` dan sesuaikan nilai baru seperti `run_once`, `colored_console`, `per_account_pause_seconds`, dan `wait_timeout_seconds`.
-5. Untuk testing aman, jalankan `python main.py --once` atau set `run_once: true`, lalu cek log.
+4. Cek `config/settings.json` dan sesuaikan nilai baru seperti `run_once`, `colored_console`, dan `wait_timeout_seconds`.
+5. Untuk testing aman, set `run_once: true`, jalankan `python main.py`, lalu cek log.
 6. Jika login gagal, export ulang cookies setiap akun retweeter.
