@@ -8,6 +8,10 @@
     "min": 40,
     "max": 90
   },
+  "per_account_pause_seconds": {
+    "min": 3,
+    "max": 8
+  },
   "page_load_timeout_seconds": 45,
   "wait_timeout_seconds": 20,
   "action_delay_seconds": {

@@ -1,3 +1,4 @@
+import argparse
 import random
 import signal
 import time
@@ -16,6 +17,19 @@ RUNNING = True
 def stop_handler(signum, frame):  # noqa: ANN001
     global RUNNING
     RUNNING = False
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="AutoretweetX - automation retweet berbasis Selenium dan cookies per akun.",
+    )
+    parser.add_argument(
+        "--once",
+        "--test",
+        action="store_true",
+        help="Jalankan satu siklus saja untuk testing/debugging, lalu berhenti.",
+    )
+    return parser.parse_args()
 
 
 def enabled_items(items: list[Dict[str, Any]]) -> list[Dict[str, Any]]:
@@ -67,6 +81,7 @@ def process_retweeter(account: Dict[str, Any], targets: list[Dict[str, Any]], se
 
 def main() -> None:
     global RUNNING
+    args = parse_args()
     signal.signal(signal.SIGINT, stop_handler)
     signal.signal(signal.SIGTERM, stop_handler)
 
@@ -87,6 +102,9 @@ def main() -> None:
             if not RUNNING:
                 break
             process_retweeter(account, targets, settings, tracker, logger)
+            pause_cfg = settings.get("per_account_pause_seconds", {"min": 3, "max": 8})
+            if RUNNING and account != retweeters[-1]:
+                random_sleep(float(pause_cfg.get("min", 3)), float(pause_cfg.get("max", 8)), logger)
 
         if run_once:
             logger.info("Mode run_once aktif. Script berhenti setelah satu siklus.")
