@@ -1,0 +1,38 @@
+{
+  "targets": [
+    {"username": "OpenAI", "enabled": true},
+    {"username": "XDevelopers", "enabled": true}
+  ],
+  "retweeters": [
+    {
+      "name": "akun_retweeter_1",
+      "enabled": true,
+      "cookies_file": "config/cookies/akun_retweeter_1.json",
+      "proxy": null
+    },
+    {
+      "name": "akun_retweeter_2",
+      "enabled": true,
+      "cookies_file": "config/cookies/akun_retweeter_2.json",
+      "proxy": null
+    },
+    {
+      "name": "akun_retweeter_3",
+      "enabled": true,
+      "cookies_file": "config/cookies/akun_retweeter_3.json",
+      "proxy": "http://user:password@127.0.0.1:8080"
+    },
+    {
+      "name": "akun_retweeter_4",
+      "enabled": false,
+      "cookies_file": "config/cookies/akun_retweeter_4.json",
+      "proxy": null
+    },
+    {
+      "name": "akun_retweeter_5",
+      "enabled": false,
+      "cookies_file": "config/cookies/akun_retweeter_5.json",
+      "proxy": null
+    }
+  ]
+}
