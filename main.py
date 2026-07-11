@@ -1,11 +1,14 @@
 import random
 import signal
+import time
 from typing import Any, Dict
+
+from selenium.common.exceptions import WebDriverException
 
 from src.browser import create_driver, load_cookies, save_cookies
 from src.retweeter import TwitterRetweeter
 from src.tracker import RetweetTracker
-from src.utils import read_json, setup_logging, validate_config
+from src.utils import ensure_runtime_dirs, print_progress, read_json, setup_logging, validate_config
 
 RUNNING = True
 
@@ -32,10 +35,13 @@ def process_retweeter(account: Dict[str, Any], targets: list[Dict[str, Any]], se
         bot = TwitterRetweeter(driver, settings, logger)
         if not bot.ensure_logged_in():
             save_cookies(driver, account["cookies_file"], logger)
+            logger.warning("Lewati %s karena sesi login tidak valid", name)
             return
 
-        for target in targets:
+        total_targets = len(targets)
+        for index, target in enumerate(targets, start=1):
             username = target["username"].lstrip("@")
+            print_progress(index, total_targets, f"Checking @{username}")
             tweets = bot.latest_tweets(username, int(settings.get("max_latest_tweets_per_target", 3)))
             logger.info("Target @%s: menemukan %s tweet terbaru", username, len(tweets))
             for tweet in tweets:
@@ -46,12 +52,17 @@ def process_retweeter(account: Dict[str, Any], targets: list[Dict[str, Any]], se
                     tracker.mark_retweeted(name, tweet["id"])
 
         save_cookies(driver, account["cookies_file"], logger)
+    except WebDriverException as exc:
+        logger.exception("Browser crash saat memproses %s. Akun lain tetap dilanjutkan: %s", name, exc)
     except Exception as exc:  # keep other accounts running if one account fails
         logger.exception("Error saat memproses %s: %s", name, exc)
     finally:
         if driver:
-            driver.quit()
-            logger.info("Browser ditutup untuk %s", name)
+            try:
+                driver.quit()
+                logger.info("Browser ditutup untuk %s", name)
+            except WebDriverException as exc:
+                logger.warning("Browser untuk %s sudah tertutup/tidak merespons: %s", name, exc)
 
 
 def main() -> None:
@@ -59,15 +70,17 @@ def main() -> None:
     signal.signal(signal.SIGINT, stop_handler)
     signal.signal(signal.SIGTERM, stop_handler)
 
+    ensure_runtime_dirs("logs", "data", "config/cookies")
     accounts = read_json("config/accounts.json")
     settings = read_json("config/settings.json")
     validate_config(accounts, settings)
-    logger = setup_logging(settings.get("log_file", "logs/autoretweetx.log"))
+    logger = setup_logging(settings.get("log_file", "logs/autoretweetx.log"), bool(settings.get("colored_console", True)))
     tracker = RetweetTracker(settings.get("retweet_history_path", "data/retweet_history.json"))
 
     targets = enabled_items(accounts["targets"])
     retweeters = enabled_items(accounts["retweeters"])
-    logger.info("AutoretweetX aktif: %s target, %s retweeter", len(targets), len(retweeters))
+    run_once = bool(settings.get("run_once", False))
+    logger.info("AutoretweetX aktif: %s target, %s retweeter, run_once=%s", len(targets), len(retweeters), run_once)
 
     while RUNNING:
         for account in retweeters:
@@ -75,6 +88,9 @@ def main() -> None:
                 break
             process_retweeter(account, targets, settings, tracker, logger)
 
+        if run_once:
+            logger.info("Mode run_once aktif. Script berhenti setelah satu siklus.")
+            break
         if not RUNNING:
             break
 
@@ -84,7 +100,7 @@ def main() -> None:
         remaining = delay_minutes * 60
         while RUNNING and remaining > 0:
             sleep_for = min(5, remaining)
-            signal.pause() if False else __import__("time").sleep(sleep_for)
+            time.sleep(sleep_for)
             remaining -= sleep_for
 
     logger.info("AutoretweetX dihentikan dengan aman.")

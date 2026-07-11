@@ -1,20 +1,21 @@
 # AutoretweetX
 
-AutoretweetX adalah automation lokal berbasis Python + Selenium untuk memonitor tweet terbaru dari beberapa akun target X/Twitter dan melakukan retweet memakai beberapa akun retweeter yang login dengan cookies masing-masing.
+AutoretweetX adalah automation lokal berbasis **Python + Selenium** untuk memonitor tweet terbaru dari beberapa akun target X/Twitter dan melakukan retweet memakai beberapa akun retweeter yang login dengan cookies masing-masing.
 
-> Gunakan hanya untuk akun yang Anda miliki/kelola dan patuhi aturan X/Twitter. Otomasi yang agresif dapat membuat akun dibatasi. Default delay dibuat panjang (40-90 menit) agar penggunaan lebih natural.
+> Gunakan hanya untuk akun yang Anda miliki/kelola dan patuhi aturan X/Twitter. Otomasi yang terlalu agresif dapat membuat akun dibatasi. Default delay dibuat panjang agar perilaku lebih natural.
 
 ## Fitur
 
-- Fleksibel untuk N akun retweeter dan M akun target melalui `config/accounts.json`.
-- Login akun retweeter menggunakan file cookies JSON per akun.
-- Monitor beberapa tweet terbaru dari semua target aktif.
+- Fleksibel untuk banyak akun target dan banyak akun retweeter melalui `config/accounts.json`.
+- Tetap mendukung **cookies per akun** di folder `config/cookies/`.
 - Retweet hanya untuk tweet yang belum tercatat di `data/retweet_history.json`.
-- Delay acak 40-90 menit antar siklus pengecekan.
-- Struktur proxy per akun sudah tersedia.
-- Logging ke console dan file `logs/autoretweetx.log`.
-- Jalankan dengan `python main.py`.
-- Bisa dihentikan dengan `Ctrl+C`.
+- Delay acak antar siklus pengecekan agar tidak terlalu repetitif.
+- Opsi `run_once` untuk menjalankan satu siklus saja saat testing.
+- Progress bar sederhana saat mengecek target.
+- Console log berwarna dengan `colorama` dan file log di `logs/autoretweetx.log`.
+- Folder runtime `logs/` dan `data/` dibuat otomatis jika belum ada.
+- Error handling lebih aman untuk cookies gagal, login expired, browser crash, dan selector yang berubah.
+- Opsi proxy per akun tetap tersedia.
 
 ## Struktur Repository
 
@@ -24,25 +25,28 @@ config/
   accounts.json
   settings.json
   cookies/
+    .gitkeep
 src/
   browser.py
   retweeter.py
   tracker.py
   utils.py
+logs/
+  .gitkeep
+data/
+  .gitkeep
+  retweet_history.json
 requirements.txt
 README.md
 .gitignore
-data/retweet_history.json
 ```
 
 ## 1. Clone repo
 
 ```bash
-git clone https://github.com/mangeakkun-ops/autoreweetx.git
-cd autoreweetx
+git clone https://github.com/mangeakkun-ops/autoretweetx.git
+cd autoretweetx
 ```
-
-Jika folder lokal repo ini bernama `autoretweetx`, tetap bisa digunakan; yang penting Anda menjalankan perintah dari root project.
 
 ## 2. Install dependencies
 
@@ -55,7 +59,7 @@ source .venv/bin/activate  # macOS/Linux
 pip install -r requirements.txt
 ```
 
-Pastikan Google Chrome sudah terinstall. Paket `undetected-chromedriver` akan menyiapkan driver yang kompatibel secara otomatis pada banyak environment.
+Pastikan **Google Chrome** sudah terinstall. Paket `undetected-chromedriver` akan menyiapkan driver yang kompatibel secara otomatis pada banyak environment.
 
 ## 3. Setup cookies untuk akun retweeter
 
@@ -63,7 +67,7 @@ Cara paling mudah adalah export cookies dari Chrome memakai extension exporter c
 
 1. Buka Chrome normal, login ke akun X/Twitter retweeter pertama.
 2. Buka `https://x.com/home` dan pastikan akun benar-benar sudah login.
-3. Install salah satu extension export cookies JSON, misalnya **Cookie-Editor** dari Chrome Web Store.
+3. Install extension export cookies JSON, misalnya **Cookie-Editor** dari Chrome Web Store.
 4. Buka extension tersebut saat berada di domain `x.com`.
 5. Export cookies dalam format JSON.
 6. Simpan file hasil export ke folder `config/cookies/` sesuai nama di `accounts.json`, contoh:
@@ -72,15 +76,15 @@ Cara paling mudah adalah export cookies dari Chrome memakai extension exporter c
    - `config/cookies/akun_retweeter_3.json`
 7. Ulangi untuk semua akun retweeter. Gunakan profile Chrome berbeda atau logout-login bergantian supaya cookies tidak tertukar.
 
-Catatan:
+Catatan penting:
 
 - Jangan commit file cookies. `.gitignore` sudah mengabaikan `config/cookies/*.json`.
-- Jika script gagal login, cookies kemungkinan expired. Export ulang cookies dari akun tersebut.
+- Jika script gagal login, cookies kemungkinan expired atau salah akun. Export ulang cookies dari akun tersebut.
 - Format JSON dari extension biasanya berisi list object cookies. Script mendukung field umum seperti `name`, `value`, `domain`, `path`, `expiry`, dan `expirationDate`.
 
 ## 4. Isi `config/accounts.json`
 
-Contoh bawaan berisi 5 retweeter dan 2 target:
+Contoh bawaan berisi beberapa retweeter dan target:
 
 ```json
 {
@@ -93,30 +97,6 @@ Contoh bawaan berisi 5 retweeter dan 2 target:
       "name": "akun_retweeter_1",
       "enabled": true,
       "cookies_file": "config/cookies/akun_retweeter_1.json",
-      "proxy": null
-    },
-    {
-      "name": "akun_retweeter_2",
-      "enabled": true,
-      "cookies_file": "config/cookies/akun_retweeter_2.json",
-      "proxy": null
-    },
-    {
-      "name": "akun_retweeter_3",
-      "enabled": true,
-      "cookies_file": "config/cookies/akun_retweeter_3.json",
-      "proxy": "http://user:password@127.0.0.1:8080"
-    },
-    {
-      "name": "akun_retweeter_4",
-      "enabled": false,
-      "cookies_file": "config/cookies/akun_retweeter_4.json",
-      "proxy": null
-    },
-    {
-      "name": "akun_retweeter_5",
-      "enabled": false,
-      "cookies_file": "config/cookies/akun_retweeter_5.json",
       "proxy": null
     }
   ]
@@ -131,7 +111,42 @@ Cara modifikasi:
 - Isi `proxy` dengan `null` jika tidak memakai proxy.
 - Format proxy yang umum: `http://user:password@host:port` atau `http://host:port`.
 
-## 5. Menjalankan script pertama kali
+## 5. Konfigurasi `config/settings.json`
+
+```json
+{
+  "headless": false,
+  "browser_window_size": "1280,900",
+  "disable_gpu": true,
+  "run_once": false,
+  "colored_console": true,
+  "check_delay_minutes": {
+    "min": 40,
+    "max": 90
+  },
+  "page_load_timeout_seconds": 45,
+  "wait_timeout_seconds": 20,
+  "action_delay_seconds": {
+    "min": 2,
+    "max": 6
+  },
+  "max_latest_tweets_per_target": 3,
+  "retweet_history_path": "data/retweet_history.json",
+  "log_file": "logs/autoretweetx.log"
+}
+```
+
+Penjelasan singkat:
+
+- `headless`: `false` untuk debugging awal agar browser terlihat; `true` untuk berjalan tanpa UI.
+- `run_once`: `true` untuk satu siklus pengecekan saja, cocok untuk testing.
+- `colored_console`: aktifkan/nonaktifkan warna log di terminal.
+- `check_delay_minutes`: delay acak antar siklus.
+- `action_delay_seconds`: delay acak antar aksi klik.
+- `max_latest_tweets_per_target`: jumlah tweet terbaru yang dibaca per target.
+- `log_file`: lokasi file log runtime.
+
+## 6. Menjalankan script
 
 Setelah cookies tersimpan dan config sudah benar:
 
@@ -142,12 +157,14 @@ python main.py
 Alur kerja script:
 
 1. Membaca `config/accounts.json` dan `config/settings.json`.
-2. Membuka browser untuk setiap retweeter aktif.
-3. Memuat cookies dari file JSON akun tersebut.
-4. Mengecek tweet terbaru target aktif.
-5. Melakukan retweet jika tweet belum ada di `data/retweet_history.json`.
-6. Menyimpan history retweet dan cookies terbaru.
-7. Menunggu delay acak 40-90 menit sebelum siklus berikutnya.
+2. Membuat folder `logs/`, `data/`, dan `config/cookies/` jika belum ada.
+3. Membuka browser untuk setiap retweeter aktif.
+4. Memuat cookies dari file JSON akun tersebut.
+5. Memastikan akun berhasil login.
+6. Mengecek tweet terbaru target aktif dengan progress bar sederhana.
+7. Melakukan retweet jika tweet belum ada di history.
+8. Menyimpan history retweet dan cookies terbaru.
+9. Jika `run_once: false`, menunggu delay acak sebelum siklus berikutnya.
 
 Untuk berhenti, tekan:
 
@@ -155,28 +172,56 @@ Untuk berhenti, tekan:
 Ctrl+C
 ```
 
-## Konfigurasi delay dan logging
+## Mode testing satu kali
 
-Edit `config/settings.json`:
+Untuk test tanpa loop panjang, edit `config/settings.json`:
 
 ```json
-{
-  "headless": false,
-  "browser_window_size": "1280,900",
-  "check_delay_minutes": {"min": 40, "max": 90},
-  "page_load_timeout_seconds": 45,
-  "action_delay_seconds": {"min": 2, "max": 6},
-  "max_latest_tweets_per_target": 3,
-  "retweet_history_path": "data/retweet_history.json",
-  "log_file": "logs/autoretweetx.log"
-}
+"run_once": true
 ```
 
-Untuk debugging awal, biarkan `headless` bernilai `false` agar browser terlihat. Setelah stabil, Anda bisa mencoba `true`.
+Lalu jalankan:
+
+```bash
+python main.py
+```
+
+Jika sudah stabil, ubah kembali ke:
+
+```json
+"run_once": false
+```
+
+## Tips anti-detect sederhana
+
+- Jangan gunakan delay yang terlalu pendek.
+- Jangan menaruh terlalu banyak target dan retweeter sekaligus pada akun baru.
+- Gunakan cookies akun yang valid dan stabil.
+- Gunakan proxy hanya jika proxy tersebut berkualitas dan konsisten dengan lokasi akun.
+- Untuk debugging awal, gunakan `headless: false` agar mudah melihat jika ada captcha, challenge, atau popup.
 
 ## Troubleshooting
 
-- **Browser terbuka tetapi tidak login**: cookies expired atau file cookies salah akun. Export ulang cookies.
-- **Tidak menemukan tweet**: X/Twitter mengubah struktur halaman, target protected, atau koneksi/proxy bermasalah.
-- **Retweet gagal**: akun dibatasi, tweet tidak bisa diretweet, selector X berubah, atau muncul verifikasi keamanan.
+- **Browser terbuka tetapi tidak login**: cookies expired, salah akun, atau format cookie tidak cocok. Export ulang cookies.
+- **Cookie file belum ada**: cek nama `cookies_file` di `config/accounts.json` dan pastikan file berada di `config/cookies/`.
+- **Browser gagal dibuat/crash**: pastikan Google Chrome terinstall dan update. Coba nonaktifkan proxy dulu.
+- **Tidak menemukan tweet**: target protected, tidak ada tweet, koneksi/proxy lambat, atau selector X berubah.
+- **Retweet gagal**: akun dibatasi, tweet tidak bisa diretweet, selector berubah, popup menghalangi klik, atau muncul verifikasi keamanan.
 - **Proxy gagal**: coba jalankan tanpa proxy dahulu, lalu validasi proxy dengan browser biasa.
+
+## Instruksi update untuk user lama
+
+1. Pull/update repo terbaru.
+2. Jalankan ulang install dependency karena ada dependency baru:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. Pastikan folder berikut ada, atau biarkan script membuatnya otomatis:
+   - `logs/`
+   - `data/`
+   - `config/cookies/`
+4. Cek `config/settings.json` dan sesuaikan nilai baru seperti `run_once`, `colored_console`, dan `wait_timeout_seconds`.
+5. Untuk testing aman, set `run_once: true`, jalankan `python main.py`, lalu cek log.
+6. Jika login gagal, export ulang cookies setiap akun retweeter.
