@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# Runtime secrets and local data
+config/cookies/*.json
+!config/cookies/.gitkeep
+logs/*.log
+*.log
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/

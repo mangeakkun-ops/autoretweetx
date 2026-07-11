@@ -1,0 +1,29 @@
+{
+  "headless": false,
+  "browser_window_size": "1280,900",
+  "run_once": false,
+  "check_delay_minutes": {
+    "min": 40,
+    "max": 90
+  },
+  "page_load_timeout_seconds": 45,
+  "element_wait_timeout_seconds": 20,
+  "action_delay_seconds": {
+    "min": 2,
+    "max": 6
+  },
+  "account_cooldown_seconds": {
+    "min": 8,
+    "max": 20
+  },
+  "max_latest_tweets_per_target": 3,
+  "retweet_history_path": "data/retweet_history.json",
+  "log_file": "logs/autoretweetx.log",
+  "console_colors": true,
+  "show_progress_bar": true,
+  "save_cookies_after_run": true,
+  "retry": {
+    "browser_start_attempts": 2,
+    "page_refresh_attempts": 1
+  }
+}
