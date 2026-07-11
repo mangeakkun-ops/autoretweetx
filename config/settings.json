@@ -1,11 +1,15 @@
 {
   "headless": false,
   "browser_window_size": "1280,900",
+  "disable_gpu": true,
+  "run_once": false,
+  "colored_console": true,
   "check_delay_minutes": {
     "min": 40,
     "max": 90
   },
   "page_load_timeout_seconds": 45,
+  "wait_timeout_seconds": 20,
   "action_delay_seconds": {
     "min": 2,
     "max": 6
